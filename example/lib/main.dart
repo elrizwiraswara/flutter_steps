@@ -28,7 +28,8 @@ class FlutterStepsSamplesView extends StatefulWidget {
   const FlutterStepsSamplesView({super.key});
 
   @override
-  State<FlutterStepsSamplesView> createState() => _FlutterStepsSamplesViewState();
+  State<FlutterStepsSamplesView> createState() =>
+      _FlutterStepsSamplesViewState();
 }
 
 class _FlutterStepsSamplesViewState extends State<FlutterStepsSamplesView> {
