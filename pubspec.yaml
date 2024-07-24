@@ -1,6 +1,6 @@
 name: flutter_steps
 description: A customizable widget that allows you to display a series of steps in a horizontal or vertical direction.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/elrizwiraswara/flutter_steps
 
 environment:
@@ -14,3 +14,17 @@ dependencies:
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.24.0
+
+platforms:
+  android:
+  ios:
+  macos:
+  web:
+  windows:
+
+topics:
+  - steps
+  - flutter-steps
+  - steps-widget
+  - stepper
+  - flutter-stepper
