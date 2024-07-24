@@ -23,7 +23,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_steps: ^1.0.3
+  flutter_steps: ^1.0.2
 ```
 
 Then run `flutter pub get` to install the package.
