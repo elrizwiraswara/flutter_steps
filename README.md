@@ -12,9 +12,9 @@ The Flutter Steps package is a customizable widget that allows you to display a 
 
 <br/>
 <p align="left">
-  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/1.png" alt="Image 1" height="554" style="margin-right: 10px;">
-  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/2.png" alt="Image 2" height="554" style="margin-right: 10px;">
-  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/3.png" alt="Image 2" height="554" style="margin-right: 10px;">
+  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/1.png" alt="Image 1" height="500" style="margin-right: 10px;">
+  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/2.png" alt="Image 2" height="500" style="margin-right: 10px;">
+  <img src="https://github.com/elrizwiraswara/flutter_steps/raw/main/3.png" alt="Image 2" height="500" style="margin-right: 10px;">
 </p>
 
 ## Installation
@@ -23,7 +23,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_steps: ^1.0.2
+  flutter_steps: ^1.0.3
 ```
 
 Then run `flutter pub get` to install the package.
