@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
 ```
 
 ## Example
-Check out the [example](example) directory for a complete sample app demonstrating the use of the app_image package.
+Check out the [example](example) directory for a complete sample app demonstrating the use of the 'flutter_steps' package.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

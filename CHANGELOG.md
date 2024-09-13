@@ -1,15 +1,19 @@
-## 1.0.0
+## 1.0.4
 
-- Initial version.
-
-## 1.0.1
-
-- Updated pubspec.yaml
-
-## 1.0.2
-
-- Updated README.md
+- Update README.md
 
 ## 1.0.3
 
-- Updated README.md
+- Update README.md
+
+## 1.0.2
+
+- Update README.md
+
+## 1.0.1
+
+- Update pubspec.yaml
+
+## 1.0.0
+
+- Initial version.
