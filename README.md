@@ -23,7 +23,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_steps: ^1.0.3
+  flutter_steps: ^1.0.5
 ```
 
 Then run `flutter pub get` to install the package.
@@ -31,7 +31,7 @@ Then run `flutter pub get` to install the package.
 ## Usage
 ### Basic Usage
 
-```
+```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_steps/flutter_steps.dart';
 
@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
 ```
 
 ## Example
-Check out the [example](example) directory for a complete sample app demonstrating the use of the 'flutter_steps' package.
+Check out the [example](example) directory for a complete sample app demonstrating the use of the `flutter_steps` package.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
