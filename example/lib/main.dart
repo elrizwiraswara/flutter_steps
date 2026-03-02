@@ -157,6 +157,21 @@ class _FlutterStepsSamplesViewState extends State<FlutterStepsSamplesView> {
     )
   ];
 
+  late FlutterStepsController _controller;
+  int _tappedStep = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = FlutterStepsController(initialStep: 1);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,6 +181,8 @@ class _FlutterStepsSamplesViewState extends State<FlutterStepsSamplesView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            interactiveStepsWithController(),
+            interactiveStepsWithTap(),
             defaultHorizontalSteps(),
             defaultHorizontalStepsWithSubtitle(),
             defaultHorizontalStepsWithUncontinuousStepLine(),
@@ -180,6 +197,59 @@ class _FlutterStepsSamplesViewState extends State<FlutterStepsSamplesView> {
             verticalStepsCustomLeadingsAndStyles(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget interactiveStepsWithController() {
+    return SampleWrapper(
+      title: 'Interactive Steps With Controller (Next/Back)',
+      widget: Column(
+        children: [
+          FlutterSteps(
+            steps: basicSteps,
+            controller: _controller,
+            titleFontSize: 12,
+            subtitleFontSize: 8,
+            onStepChanged: (step) {
+              debugPrint('Step changed to: $step');
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => _controller.back(),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Back'),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: () => _controller.next(basicSteps.length),
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('Next'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget interactiveStepsWithTap() {
+    return SampleWrapper(
+      title: 'Interactive Steps With Tap',
+      widget: FlutterSteps(
+        steps: basicSteps,
+        currentStep: _tappedStep,
+        titleFontSize: 12,
+        subtitleFontSize: 8,
+        onStepTapped: (index) {
+          setState(() {
+            _tappedStep = index;
+          });
+        },
       ),
     );
   }

@@ -9,6 +9,7 @@ The Flutter Steps package is a customizable widget that allows you to display a 
 - **Step Line Options**: Show or hide the line connecting steps, with options for continuous or dashed lines.
 - **Step Counters**: Optionally display counters for each step.
 - **Interactive**: Supports showing subtitles and custom leading elements for active and inactive steps.
+- **Navigation**: Built-in support for next/back navigation via `FlutterStepsController`, `currentStep` property, and `onStepTapped` callback.
 
 <br/>
 <p align="left">
@@ -23,12 +24,13 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_steps: ^1.0.5
+  flutter_steps: ^2.0.0
 ```
 
 Then run `flutter pub get` to install the package.
 
 ## Usage
+
 ### Basic Usage
 
 ```dart
@@ -63,6 +65,119 @@ class MyApp extends StatelessWidget {
   }
 }
 ```
+
+### Navigation with Controller
+
+Use `FlutterStepsController` for programmatic next/back navigation:
+
+```dart
+class MyStepperPage extends StatefulWidget {
+  @override
+  State<MyStepperPage> createState() => _MyStepperPageState();
+}
+
+class _MyStepperPageState extends State<MyStepperPage> {
+  final _controller = FlutterStepsController(initialStep: 0);
+
+  final steps = List.generate(
+    5,
+    (i) => Steps(title: 'Step ${i + 1}'),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        FlutterSteps(
+          steps: steps,
+          controller: _controller,
+          onStepChanged: (step) => print('Now at step $step'),
+        ),
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () => _controller.back(),
+              child: Text('Back'),
+            ),
+            ElevatedButton(
+              onPressed: () => _controller.next(steps.length),
+              child: Text('Next'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+```
+
+### Navigation with currentStep
+
+For simpler cases without a controller:
+
+```dart
+int _currentStep = 0;
+
+FlutterSteps(
+  steps: mySteps,
+  currentStep: _currentStep, // All steps <= _currentStep are active
+  onStepTapped: (index) {
+    setState(() => _currentStep = index);
+  },
+)
+```
+
+### Tap Navigation
+
+Make steps tappable by providing `onStepTapped`:
+
+```dart
+FlutterSteps(
+  steps: mySteps,
+  currentStep: _currentStep,
+  onStepTapped: (index) {
+    setState(() => _currentStep = index);
+  },
+)
+```
+
+## API Reference
+
+### FlutterSteps
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `steps` | `List<Steps>` | required | The list of steps to display |
+| `direction` | `Axis` | `Axis.horizontal` | Horizontal or vertical layout |
+| `controller` | `FlutterStepsController?` | `null` | Controller for programmatic navigation |
+| `currentStep` | `int?` | `null` | Current step index (all steps <= index are active) |
+| `onStepTapped` | `ValueChanged<int>?` | `null` | Callback when a step is tapped |
+| `onStepChanged` | `ValueChanged<int>?` | `null` | Callback when controller step changes |
+| `showCounter` | `bool` | `true` | Show step numbers |
+| `showSubtitle` | `bool` | `true` | Show subtitles |
+| `showStepLine` | `bool` | `true` | Show connecting lines |
+| `isStepLineDashed` | `bool` | `false` | Use dashed lines |
+| `isStepLineContinuous` | `bool` | `true` | Continuous line connections |
+| `hideInactiveLeading` | `bool` | `false` | Hide leading for inactive steps |
+| `leadingSize` | `double` | `32` | Size of leading indicator |
+| `leadingSizeFactor` | `double` | `2` | Size multiplier for leading |
+
+### FlutterStepsController
+
+| Method | Description |
+|---|---|
+| `next(int totalSteps)` | Move to the next step |
+| `back()` | Move to the previous step |
+| `jumpTo(int step, int totalSteps)` | Jump to a specific step |
+| `currentStep` | Get the current step index |
+| `isFirstStep` | Whether at the first step |
+| `isLastStep(int totalSteps)` | Whether at the last step |
 
 ## Example
 Check out the [example](example) directory for a complete sample app demonstrating the use of the `flutter_steps` package.

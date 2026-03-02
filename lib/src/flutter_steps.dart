@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_steps/src/flutter_steps_controller.dart';
 import 'package:flutter_steps/src/steps.dart';
 
 /// A widget that displays a series of steps with various customization options.
+///
+/// Supports both horizontal and vertical layouts, with optional navigation
+/// via [controller], [currentStep], and [onStepTapped].
 class FlutterSteps extends StatefulWidget {
   /// The list of steps to display.
   final List<Steps> steps;
@@ -84,40 +88,64 @@ class FlutterSteps extends StatefulWidget {
   /// The radius for the step line's corners.
   final double stepLineRadius;
 
+  /// A controller for programmatic navigation between steps.
+  ///
+  /// When provided, the controller's [FlutterStepsController.currentStep]
+  /// determines which steps are active (all steps <= currentStep).
+  /// This overrides individual [Steps.isActive] flags.
+  final FlutterStepsController? controller;
+
+  /// The current step index. All steps with index <= [currentStep] are active.
+  ///
+  /// This is a simpler alternative to [controller] for cases where you don't
+  /// need programmatic next/back methods.
+  /// Overrides individual [Steps.isActive] flags.
+  /// If [controller] is also provided, [controller] takes priority.
+  final int? currentStep;
+
+  /// Called when a step indicator is tapped.
+  ///
+  /// The callback receives the index of the tapped step.
+  /// Step indicators become tappable only when this callback is provided.
+  final ValueChanged<int>? onStepTapped;
+
+  /// Called when the current step changes via the [controller].
+  final ValueChanged<int>? onStepChanged;
+
   /// Creates a [FlutterSteps] widget.
   const FlutterSteps({
     super.key,
-    required this.steps, // List of steps to be displayed.
-    this.direction = Axis.horizontal, // Direction of the steps.
-    this.crossAxisAlignment = CrossAxisAlignment
-        .center, // Alignment of the steps along the cross axis.
-    this.showCounter = true, // Whether to show a counter for the steps.
-    this.showSubtitle = true, // Whether to show subtitles for the steps.
-    this.hideInactiveLeading =
-        false, // Whether to hide the leading element for inactive steps.
-    this.isStepLineDashed = false, // Whether the step line should be dashed.
-    this.showStepLine = true, // Whether to show a line connecting the steps.
-    this.isStepLineContinuous =
-        true, // Whether the step line should be continuous.
-    this.activeColor, // The color for active steps.
-    this.inactiveColor, // The color for inactive steps.
-    this.titleActiveColor, // The color for the title of active steps.
-    this.titleInactiveColor, // The color for the title of inactive steps.
-    this.subtitleActiveColor, // The color for the subtitle of active steps.
-    this.subtitleInactiveColor, // The color for the subtitle of inactive steps.
-    this.activeStepLineColor, // The color for the step line of active steps.
-    this.inactiveStepLineColor, // The color for the step line of inactive steps.
-    this.leadingSize = 32, // The size of the leading element.
-    this.leadingSizeFactor = 2, // The size factor for the leading element.
-    this.titleFontSize, // The font size for the title.
-    this.subtitleFontSize, // The font size for the subtitle.
-    this.titleStyle, // The text style for the title.
-    this.subtitleStyle, // The text style for the subtitle.
-    this.stepLineHeight = 2, // The height of the step line.
-    this.stepLineWidth = 2, // The width of the step line.
-    this.dashFillRate =
-        0.7, // The fill rate for the dash pattern of the step line.
-    this.stepLineRadius = 100, // The radius for the step line's corners.
+    required this.steps,
+    this.direction = Axis.horizontal,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.showCounter = true,
+    this.showSubtitle = true,
+    this.hideInactiveLeading = false,
+    this.isStepLineDashed = false,
+    this.showStepLine = true,
+    this.isStepLineContinuous = true,
+    this.activeColor,
+    this.inactiveColor,
+    this.titleActiveColor,
+    this.titleInactiveColor,
+    this.subtitleActiveColor,
+    this.subtitleInactiveColor,
+    this.activeStepLineColor,
+    this.inactiveStepLineColor,
+    this.leadingSize = 32,
+    this.leadingSizeFactor = 2,
+    this.titleFontSize,
+    this.subtitleFontSize,
+    this.titleStyle,
+    this.subtitleStyle,
+    this.stepLineHeight = 2,
+    this.stepLineWidth = 2,
+    this.dashFillRate = 0.7,
+    this.stepLineRadius = 100,
+    this.controller,
+    this.currentStep,
+    this.onStepTapped,
+    this.onStepChanged,
   });
 
   @override
@@ -135,22 +163,68 @@ class _FlutterStepsState extends State<FlutterSteps> {
   late Color _inactiveStepLineColor;
 
   @override
-  Widget build(BuildContext context) {
-    _activeColor = widget.activeColor ?? Theme.of(context).colorScheme.primary;
-    _inactiveColor =
-        widget.inactiveColor ?? Theme.of(context).colorScheme.outline;
-    _titleActiveColor =
-        widget.titleActiveColor ?? Theme.of(context).colorScheme.primary;
-    _titleInactiveColor =
-        widget.titleInactiveColor ?? Theme.of(context).colorScheme.outline;
-    _subtitleActiveColor =
-        widget.subtitleActiveColor ?? Theme.of(context).colorScheme.secondary;
+  void initState() {
+    super.initState();
+    widget.controller?.addListener(_onControllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant FlutterSteps oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?.removeListener(_onControllerChanged);
+      widget.controller?.addListener(_onControllerChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller?.removeListener(_onControllerChanged);
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    setState(() {});
+    widget.onStepChanged?.call(widget.controller!.currentStep);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveColors();
+  }
+
+  void _resolveColors() {
+    final colorScheme = Theme.of(context).colorScheme;
+    _activeColor = widget.activeColor ?? colorScheme.primary;
+    _inactiveColor = widget.inactiveColor ?? colorScheme.outline;
+    _titleActiveColor = widget.titleActiveColor ?? colorScheme.primary;
+    _titleInactiveColor = widget.titleInactiveColor ?? colorScheme.outline;
+    _subtitleActiveColor = widget.subtitleActiveColor ?? colorScheme.secondary;
     _subtitleInactiveColor =
-        widget.subtitleInactiveColor ?? Theme.of(context).colorScheme.outline;
-    _activeStepLineColor =
-        widget.activeStepLineColor ?? Theme.of(context).colorScheme.primary;
+        widget.subtitleInactiveColor ?? colorScheme.outline;
+    _activeStepLineColor = widget.activeStepLineColor ?? colorScheme.primary;
     _inactiveStepLineColor =
-        widget.inactiveStepLineColor ?? Theme.of(context).colorScheme.outline;
+        widget.inactiveStepLineColor ?? colorScheme.outline;
+  }
+
+  /// Determines if a step at [index] is active.
+  ///
+  /// Priority: controller > currentStep property > Steps.isActive flag.
+  bool _isStepActive(int index) {
+    if (widget.controller != null) {
+      return index <= widget.controller!.currentStep;
+    }
+    if (widget.currentStep != null) {
+      return index <= widget.currentStep!;
+    }
+    return widget.steps[index].isActive;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Re-resolve colors if widget properties changed
+    _resolveColors();
 
     return widget.direction == Axis.horizontal
         ? _horizontalSteps()
@@ -203,13 +277,12 @@ class _FlutterStepsState extends State<FlutterSteps> {
       return const SizedBox.shrink();
     }
 
-    bool isActve =
-        i == 0 ? widget.steps[i].isActive : widget.steps[i + 1].isActive;
+    bool isActive = i == 0 ? _isStepActive(i) : _isStepActive(i + 1);
 
     if (widget.isStepLineDashed) {
-      return _dashedLine(isActve);
+      return _dashedLine(isActive);
     } else {
-      return _solidLine(isActve);
+      return _solidLine(isActive);
     }
   }
 
@@ -232,7 +305,6 @@ class _FlutterStepsState extends State<FlutterSteps> {
               ? widget.leadingSize
               : boxSize,
           child: Flex(
-            // spaceBetween: the opposite of spaceAround on continuousStepLineDashed widget
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             direction: widget.direction,
             children: List.generate(dCount, (_) {
@@ -248,7 +320,9 @@ class _FlutterStepsState extends State<FlutterSteps> {
                     color: isActive
                         ? _activeStepLineColor
                         : _inactiveStepLineColor,
-                    borderRadius: BorderRadius.circular(widget.stepLineRadius),
+                    borderRadius: BorderRadius.circular(
+                      widget.stepLineRadius,
+                    ),
                   ),
                 ),
               );
@@ -262,47 +336,48 @@ class _FlutterStepsState extends State<FlutterSteps> {
   Widget _solidLine(bool isActive) {
     return Expanded(
       child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-        final boxSize = widget.direction == Axis.horizontal
-            ? constraints.constrainWidth()
-            : constraints.constrainHeight();
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final boxSize = widget.direction == Axis.horizontal
+              ? constraints.constrainWidth()
+              : constraints.constrainHeight();
 
-        return Container(
-          alignment: Alignment.center,
-          width: widget.direction == Axis.horizontal
-              ? boxSize
-              : widget.leadingSize,
-          height: widget.direction == Axis.horizontal
-              ? widget.leadingSize
-              : boxSize,
-          child: SizedBox(
+          return Container(
+            alignment: Alignment.center,
             width: widget.direction == Axis.horizontal
                 ? boxSize
-                : widget.stepLineHeight,
+                : widget.leadingSize,
             height: widget.direction == Axis.horizontal
-                ? widget.stepLineHeight
+                ? widget.leadingSize
                 : boxSize,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: isActive ? _activeStepLineColor : _inactiveStepLineColor,
+            child: SizedBox(
+              width: widget.direction == Axis.horizontal
+                  ? boxSize
+                  : widget.stepLineHeight,
+              height: widget.direction == Axis.horizontal
+                  ? widget.stepLineHeight
+                  : boxSize,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color:
+                      isActive ? _activeStepLineColor : _inactiveStepLineColor,
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
-  // Line that connection leading widget with step line widget
+  // Line that connects leading widget with step line widget
   Widget _continuousStepLine(Steps step, int i) {
     if (!widget.showStepLine || !widget.isStepLineContinuous) {
       return const SizedBox.shrink();
     }
 
-    bool firstIsActive = widget.steps[i].isActive;
-    bool nextIsActive = i < widget.steps.length - 1
-        ? widget.steps[i + 1].isActive
-        : widget.steps[i].isActive;
+    bool firstIsActive = _isStepActive(i);
+    bool nextIsActive =
+        i < widget.steps.length - 1 ? _isStepActive(i + 1) : _isStepActive(i);
 
     return SizedBox(
       width: widget.direction == Axis.horizontal
@@ -317,269 +392,112 @@ class _FlutterStepsState extends State<FlutterSteps> {
     );
   }
 
-  Widget _continuousStepLineDashed(
-      bool firstIsActive, bool nextIsActive, int i) {
-    return widget.direction == Axis.horizontal
-        ? Row(
-            children: [
-              Expanded(
-                child: LayoutBuilder(builder:
-                    (BuildContext context, BoxConstraints constraints) {
-                  final boxSize = widget.direction == Axis.horizontal
-                      ? constraints.constrainWidth()
-                      : constraints.constrainHeight();
+  Widget _buildDashedSegment({
+    required bool isActive,
+    required bool isHidden,
+  }) {
+    return Expanded(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final boxSize = widget.direction == Axis.horizontal
+              ? constraints.constrainWidth()
+              : constraints.constrainHeight();
 
-                  // if dashFillRate < 1 divide by 2, so that the density is the same as the density of dashedLine widget
-                  final dCount = (boxSize *
-                          (widget.dashFillRate == 1
-                              ? widget.dashFillRate
-                              : widget.dashFillRate / 2) /
-                          widget.stepLineWidth)
-                      .ceil();
+          final dCount = (boxSize *
+                  (widget.dashFillRate == 1
+                      ? widget.dashFillRate
+                      : widget.dashFillRate / 2) /
+                  widget.stepLineWidth)
+              .ceil();
 
-                  return Flex(
-                    // spaceAround: the opposite of spaceBetween on dashedLine widget
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    direction: widget.direction,
-                    children: List.generate(dCount, (_) {
-                      return SizedBox(
-                        width: widget.direction == Axis.horizontal
-                            ? widget.stepLineWidth
-                            : widget.stepLineHeight,
-                        height: widget.direction == Axis.horizontal
-                            ? widget.stepLineHeight
-                            : widget.stepLineWidth,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            // hide first line with transparent color
-                            color: i == 0
-                                ? Colors.transparent
-                                : (firstIsActive
-                                    ? _activeStepLineColor
-                                    : _inactiveStepLineColor),
-                            borderRadius:
-                                BorderRadius.circular(widget.stepLineRadius),
-                          ),
-                        ),
-                      );
-                    }),
-                  );
-                }),
-              ),
-              Expanded(
-                child: LayoutBuilder(builder:
-                    (BuildContext context, BoxConstraints constraints) {
-                  final boxSize = widget.direction == Axis.horizontal
-                      ? constraints.constrainWidth()
-                      : constraints.constrainHeight();
-
-                  // if dashFillRate < 1 divide by 2, so that the density is the same as the density of dashedLine widget
-                  final dCount = (boxSize *
-                          (widget.dashFillRate == 1
-                              ? widget.dashFillRate
-                              : widget.dashFillRate / 2) /
-                          widget.stepLineWidth)
-                      .ceil();
-                  return Flex(
-                    // spaceAround: the opposite of spaceBetween on dashedLine widget
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    direction: widget.direction,
-                    children: List.generate(dCount, (_) {
-                      return SizedBox(
-                        width: widget.direction == Axis.horizontal
-                            ? widget.stepLineWidth
-                            : widget.stepLineHeight,
-                        height: widget.direction == Axis.horizontal
-                            ? widget.stepLineHeight
-                            : widget.stepLineWidth,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            // hide last line with transparent color
-                            color: i == widget.steps.length - 1
-                                ? Colors.transparent
-                                : (nextIsActive
-                                    ? _activeStepLineColor
-                                    : _inactiveStepLineColor),
-                            borderRadius:
-                                BorderRadius.circular(widget.stepLineRadius),
-                          ),
-                        ),
-                      );
-                    }),
-                  );
-                }),
-              ),
-            ],
-          )
-        : Column(
-            children: [
-              Expanded(
-                child: LayoutBuilder(builder:
-                    (BuildContext context, BoxConstraints constraints) {
-                  final boxSize = widget.direction == Axis.horizontal
-                      ? constraints.constrainWidth()
-                      : constraints.constrainHeight();
-
-                  // if dashFillRate < 1 divide by 2, so that the density is the same as the density of dashedLine widget
-                  final dCount = (boxSize *
-                          (widget.dashFillRate == 1
-                              ? widget.dashFillRate
-                              : widget.dashFillRate / 2) /
-                          widget.stepLineWidth)
-                      .ceil();
-
-                  return Flex(
-                    // spaceAround: the opposite of spaceBetween on dashedLine widget
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    direction: widget.direction,
-                    children: List.generate(dCount, (_) {
-                      return SizedBox(
-                        width: widget.direction == Axis.horizontal
-                            ? widget.stepLineWidth
-                            : widget.stepLineHeight,
-                        height: widget.direction == Axis.horizontal
-                            ? widget.stepLineHeight
-                            : widget.stepLineWidth,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            // hide first line with transparent color
-                            color: i == 0
-                                ? Colors.transparent
-                                : (firstIsActive
-                                    ? _activeStepLineColor
-                                    : _inactiveStepLineColor),
-                            borderRadius:
-                                BorderRadius.circular(widget.stepLineRadius),
-                          ),
-                        ),
-                      );
-                    }),
-                  );
-                }),
-              ),
-              Expanded(
-                child: LayoutBuilder(builder:
-                    (BuildContext context, BoxConstraints constraints) {
-                  final boxSize = widget.direction == Axis.horizontal
-                      ? constraints.constrainWidth()
-                      : constraints.constrainHeight();
-
-                  // if dashFillRate < 1 divide by 2, so that the density is the same as the density of dashedLine widget
-                  final dCount = (boxSize *
-                          (widget.dashFillRate == 1
-                              ? widget.dashFillRate
-                              : widget.dashFillRate / 2) /
-                          widget.stepLineWidth)
-                      .ceil();
-
-                  return Flex(
-                    // spaceAround: the opposite of spaceBetween on dashedLine widget
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    direction: widget.direction,
-                    children: List.generate(dCount, (_) {
-                      return SizedBox(
-                        width: widget.direction == Axis.horizontal
-                            ? widget.stepLineWidth
-                            : widget.stepLineHeight,
-                        height: widget.direction == Axis.horizontal
-                            ? widget.stepLineHeight
-                            : widget.stepLineWidth,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            // hide last line with transparent color
-                            color: i == widget.steps.length - 1
-                                ? Colors.transparent
-                                : (nextIsActive
-                                    ? _activeStepLineColor
-                                    : _inactiveStepLineColor),
-                            borderRadius:
-                                BorderRadius.circular(widget.stepLineRadius),
-                          ),
-                        ),
-                      );
-                    }),
-                  );
-                }),
-              ),
-            ],
+          return Flex(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            direction: widget.direction,
+            children: List.generate(dCount, (_) {
+              return SizedBox(
+                width: widget.direction == Axis.horizontal
+                    ? widget.stepLineWidth
+                    : widget.stepLineHeight,
+                height: widget.direction == Axis.horizontal
+                    ? widget.stepLineHeight
+                    : widget.stepLineWidth,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: isHidden
+                        ? Colors.transparent
+                        : (isActive
+                            ? _activeStepLineColor
+                            : _inactiveStepLineColor),
+                    borderRadius: BorderRadius.circular(widget.stepLineRadius),
+                  ),
+                ),
+              );
+            }),
           );
+        },
+      ),
+    );
+  }
+
+  Widget _continuousStepLineDashed(
+    bool firstIsActive,
+    bool nextIsActive,
+    int i,
+  ) {
+    final children = [
+      _buildDashedSegment(
+        isActive: firstIsActive,
+        isHidden: i == 0,
+      ),
+      _buildDashedSegment(
+        isActive: nextIsActive,
+        isHidden: i == widget.steps.length - 1,
+      ),
+    ];
+
+    return widget.direction == Axis.horizontal
+        ? Row(children: children)
+        : Column(children: children);
+  }
+
+  Widget _buildSolidSegment({
+    required bool isActive,
+    required bool isHidden,
+  }) {
+    return Expanded(
+      child: Container(
+        color: isHidden
+            ? Colors.transparent
+            : (isActive ? _activeStepLineColor : _inactiveStepLineColor),
+        width: widget.direction == Axis.horizontal
+            ? widget.stepLineWidth
+            : widget.stepLineHeight,
+        height: widget.direction == Axis.horizontal
+            ? widget.stepLineHeight
+            : widget.stepLineWidth,
+      ),
+    );
   }
 
   Widget _continuousStepLineSolid(
-      bool firstIsActive, bool nextIsActive, int i) {
+    bool firstIsActive,
+    bool nextIsActive,
+    int i,
+  ) {
+    final children = [
+      _buildSolidSegment(
+        isActive: firstIsActive,
+        isHidden: i == 0,
+      ),
+      _buildSolidSegment(
+        isActive: nextIsActive,
+        isHidden: i == widget.steps.length - 1,
+      ),
+    ];
+
     return widget.direction == Axis.horizontal
-        ? Row(
-            children: [
-              Expanded(
-                child: Container(
-                  // hide first line with transparent color
-                  color: i == 0
-                      ? Colors.transparent
-                      : (firstIsActive
-                          ? _activeStepLineColor
-                          : _inactiveStepLineColor),
-                  width: widget.direction == Axis.horizontal
-                      ? widget.stepLineWidth
-                      : widget.stepLineHeight,
-                  height: widget.direction == Axis.horizontal
-                      ? widget.stepLineHeight
-                      : widget.stepLineWidth,
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  // hide last line with transparent color
-                  color: i == widget.steps.length - 1
-                      ? Colors.transparent
-                      : (nextIsActive
-                          ? _activeStepLineColor
-                          : _inactiveStepLineColor),
-                  width: widget.direction == Axis.horizontal
-                      ? widget.stepLineWidth
-                      : widget.stepLineHeight,
-                  height: widget.direction == Axis.horizontal
-                      ? widget.stepLineHeight
-                      : widget.stepLineWidth,
-                ),
-              ),
-            ],
-          )
-        : Column(
-            children: [
-              Expanded(
-                child: Container(
-                  // hide first line with transparent color
-                  color: i == 0
-                      ? Colors.transparent
-                      : (firstIsActive
-                          ? _activeStepLineColor
-                          : _inactiveStepLineColor),
-                  width: widget.direction == Axis.horizontal
-                      ? widget.stepLineWidth
-                      : widget.stepLineHeight,
-                  height: widget.direction == Axis.horizontal
-                      ? widget.stepLineHeight
-                      : widget.stepLineWidth,
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  // hide last line with transparent color
-                  color: i == widget.steps.length - 1
-                      ? Colors.transparent
-                      : (nextIsActive
-                          ? _activeStepLineColor
-                          : _inactiveStepLineColor),
-                  width: widget.direction == Axis.horizontal
-                      ? widget.stepLineWidth
-                      : widget.stepLineHeight,
-                  height: widget.direction == Axis.horizontal
-                      ? widget.stepLineHeight
-                      : widget.stepLineWidth,
-                ),
-              ),
-            ],
-          );
+        ? Row(children: children)
+        : Column(children: children);
   }
 
   Widget _stepWidgetHorizontal(Steps step, int i) {
@@ -589,17 +507,19 @@ class _FlutterStepsState extends State<FlutterSteps> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _leadingWidget(step, i),
-          _titleWidgetStepHorizontal(step),
-          _subtitleWidgetStepHorizontal(step),
+          _titleWidgetStepHorizontal(step, i),
+          _subtitleWidgetStepHorizontal(step, i),
         ],
       ),
     );
   }
 
-  Widget _titleWidgetStepHorizontal(Steps step) {
+  Widget _titleWidgetStepHorizontal(Steps step, int i) {
     if (step.title == null) {
       return const SizedBox.shrink();
     }
+
+    final isActive = _isStepActive(i);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4, top: 8),
@@ -611,17 +531,18 @@ class _FlutterStepsState extends State<FlutterSteps> {
         style: widget.titleStyle ??
             Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: widget.titleFontSize ?? widget.leadingSize / 2,
-                  color:
-                      step.isActive ? _titleActiveColor : _titleInactiveColor,
+                  color: isActive ? _titleActiveColor : _titleInactiveColor,
                 ),
       ),
     );
   }
 
-  Widget _subtitleWidgetStepHorizontal(Steps step) {
+  Widget _subtitleWidgetStepHorizontal(Steps step, int i) {
     if (!widget.showSubtitle || step.subtitle == null) {
       return const SizedBox.shrink();
     }
+
+    final isActive = _isStepActive(i);
 
     return Text(
       step.subtitle!,
@@ -631,9 +552,7 @@ class _FlutterStepsState extends State<FlutterSteps> {
       style: widget.subtitleStyle ??
           Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontSize: widget.subtitleFontSize ?? widget.leadingSize / 2.6,
-                color: step.isActive
-                    ? _subtitleActiveColor
-                    : _subtitleInactiveColor,
+                color: isActive ? _subtitleActiveColor : _subtitleInactiveColor,
               ),
     );
   }
@@ -650,8 +569,8 @@ class _FlutterStepsState extends State<FlutterSteps> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _titleWidgetStepVertical(step),
-                    _subtitleWidgetStepVertical(step),
+                    _titleWidgetStepVertical(step, i),
+                    _subtitleWidgetStepVertical(step, i),
                   ],
                 ),
               ),
@@ -659,10 +578,12 @@ class _FlutterStepsState extends State<FlutterSteps> {
     );
   }
 
-  Widget _titleWidgetStepVertical(Steps step) {
+  Widget _titleWidgetStepVertical(Steps step, int i) {
     if (step.title == null) {
       return const SizedBox.shrink();
     }
+
+    final isActive = _isStepActive(i);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -671,32 +592,33 @@ class _FlutterStepsState extends State<FlutterSteps> {
         style: widget.titleStyle ??
             Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: widget.titleFontSize ?? widget.leadingSize / 2,
-                  color:
-                      step.isActive ? _titleActiveColor : _titleInactiveColor,
+                  color: isActive ? _titleActiveColor : _titleInactiveColor,
                 ),
       ),
     );
   }
 
-  Widget _subtitleWidgetStepVertical(Steps step) {
+  Widget _subtitleWidgetStepVertical(Steps step, int i) {
     if (!widget.showSubtitle || step.subtitle == null) {
       return const SizedBox.shrink();
     }
+
+    final isActive = _isStepActive(i);
 
     return Text(
       step.subtitle!,
       style: widget.subtitleStyle ??
           Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontSize: widget.subtitleFontSize ?? widget.leadingSize / 2.6,
-                color: step.isActive
-                    ? _subtitleActiveColor
-                    : _subtitleInactiveColor,
+                color: isActive ? _subtitleActiveColor : _subtitleInactiveColor,
               ),
     );
   }
 
   Widget _leadingWidget(Steps step, int i) {
-    return SizedBox(
+    final isActive = _isStepActive(i);
+
+    Widget leading = SizedBox(
       width: widget.direction == Axis.horizontal
           ? widget.leadingSize * widget.leadingSizeFactor
           : widget.leadingSize,
@@ -706,13 +628,13 @@ class _FlutterStepsState extends State<FlutterSteps> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Line that connection leading widget with step line widget
+          // Line that connects leading widget with step line widget
           _continuousStepLine(step, i),
           if (step.leading != null)
             // Custom leading
             Center(
               child: widget.hideInactiveLeading
-                  ? step.isActive
+                  ? isActive
                       ? SizedBox(
                           width: widget.leadingSize,
                           height: widget.leadingSize,
@@ -747,14 +669,14 @@ class _FlutterStepsState extends State<FlutterSteps> {
                 color: Theme.of(context).colorScheme.surface,
                 border: Border.all(
                   width: widget.leadingSize / 12,
-                  color: step.isActive ? _activeColor : _inactiveColor,
+                  color: isActive ? _activeColor : _inactiveColor,
                 ),
               ),
               child: Container(
                 width: widget.leadingSize / (widget.showCounter ? 0 : 2),
                 height: widget.leadingSize / (widget.showCounter ? 0 : 2),
                 decoration: BoxDecoration(
-                  color: step.isActive ? _activeColor : _inactiveColor,
+                  color: isActive ? _activeColor : _inactiveColor,
                   shape: BoxShape.circle,
                 ),
                 child: widget.showCounter
@@ -777,5 +699,14 @@ class _FlutterStepsState extends State<FlutterSteps> {
         ],
       ),
     );
+
+    if (widget.onStepTapped != null) {
+      leading = GestureDetector(
+        onTap: () => widget.onStepTapped!(i),
+        child: leading,
+      );
+    }
+
+    return leading;
   }
 }
