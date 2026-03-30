@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Update README.md
+
 ## 2.0.0
 
 - Add `FlutterStepsController` for programmatic next/back/jumpTo navigation
