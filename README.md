@@ -24,7 +24,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_steps: ^2.0.0
+  flutter_steps: any
 ```
 
 Then run `flutter pub get` to install the package.
@@ -184,7 +184,3 @@ Check out the [example](example) directory for a complete sample app demonstrati
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-<a href="https://trakteer.id/elrizwiraswara/tip" target="_blank"><img id="wse-buttons-preview" src="https://cdn.trakteer.id/images/embed/trbtn-red-6.png?date=18-11-2023" height="40" style="border:0px;height:40px;margin-top:14px" alt="Trakteer Saya"></a>
